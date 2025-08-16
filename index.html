@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Creators Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <style>
+    :root{
+      --bg:#0b0f1a; --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.10);
+      --text:#e6e8f0; --muted:#9aa3b2; --accent:#7c5cff; --ring:rgba(124,92,255,.55);
+      --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--text);
+      font:500 16px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+      background:
+        radial-gradient(1200px 800px at -10% -10%, rgba(124,92,255,.25), transparent 60%),
+        radial-gradient(1000px 700px at 110% 10%, rgba(56,189,248,.25), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.05), transparent 50%),
+        var(--bg);
+    }
+    header{max-width:1100px;margin:0 auto;padding:42px 20px 10px}
+    h1{margin:0 0 8px;font-weight:800;letter-spacing:-.02em;font-size:clamp(22px,3vw+8px,34px)}
+    .subtitle{color:var(--muted);margin:0 0 18px;font-size:15px}
+    .bar{display:flex;gap:12px;align-items:center;max-width:720px}
+    .search{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);color:var(--text);outline:none}
+    .grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:18px;max-width:1100px;margin:0 auto;padding:10px 20px 60px
+    }
+    .card{
+      position:relative;border-radius:var(--radius);background:var(--card);backdrop-filter:blur(8px);
+      box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(255,255,255,.08);
+      transition:transform .15s ease, background .15s ease, box-shadow .15s ease
+    }
+    .card:hover{transform:translateY(-3px);background:var(--card2);box-shadow:0 16px 36px rgba(0,0,0,.45)}
+    .cover{width:100%;aspect-ratio:16/9;object-fit:cover;background:linear-gradient(135deg, rgba(124,92,255,.35), rgba(56,189,248,.35))}
+    .body{padding:14px 14px 16px}
+    .row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#111;border:1px solid rgba(255,255,255,.1)}
+    .name{margin:0;font-weight:800;letter-spacing:-.01em;font-size:18px;line-height:1.1}
+    .desc{color:var(--muted);margin:8px 2px 12px;font-size:14px;min-height:2.6em}
+    .meta{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:12.5px;margin-bottom:12px}
+    .pill{padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
+    .cta{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .btn{
+      appearance:none;border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(135deg, rgba(124,92,255,.2), rgba(56,189,248,.2));
+      color:var(--text);text-decoration:none;font-weight:700;padding:10px 12px;border-radius:12px;
+      outline:none;transition:box-shadow .1s ease, transform .08s ease
+    }
+    .btn:hover{box-shadow:0 0 0 6px var(--ring) inset}
+    .btn:active{transform:translateY(1px)}
+    .hidden{display:none!important}
+    footer{text-align:center;color:var(--muted);font-size:12px;padding:0 0 40px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Creators Hub</h1>
+    <p class="subtitle">One place to open any creator list you’ve made.</p>
+    <div class="bar">
+      <input id="q" class="search" type="search" placeholder="Search creators…" autocomplete="off" />
+    </div>
+  </header>
+
+  <main id="grid" class="grid"></main>
+
+  <footer>
+    <p>Powered by a simple <code>creators.json</code>. Add more creators there.</p>
+  </footer>
+
+  <script>
+    const grid = document.getElementById("grid");
+    const q = document.getElementById("q");
+
+    function el(tag, props={}, kids=[]){
+      const n=document.createElement(tag);
+      if (props.className) n.setAttribute("class", props.className);
+      for (const [k,v] of Object.entries(props)){
+        if (k==="className") continue;
+        if (k in n) n[k]=v; else n.setAttribute(k,v);
+      }
+      kids.forEach(k=>n.appendChild(k));
+      return n;
+    }
+    function fmtDate(iso){
+      try{ const d=new Date(iso); if (isNaN(d)) return null;
+        return d.toLocaleString(undefined,{year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+      }catch{ return null; }
+    }
+    function plural(n,s){ return n===1?s:s+"s"; }
+
+    async function hydrateCard(card, dataUrl){
+      if (!dataUrl) return;
+      try{
+        const res = await fetch(dataUrl, { cache:"no-store" });
+        if (!res.ok) throw new Error("HTTP "+res.status);
+        const data = await res.json();
+        const count = Array.isArray(data.channels)? data.channels.length : 0;
+        const updated = data.generatedAt ? fmtDate(data.generatedAt) : null;
+        card.querySelector(".js-count").textContent = count ? `${count} ${plural(count,"channel")}` : "—";
+        card.querySelector(".js-updated").textContent = updated ? `Updated ${updated}` : "—";
+      }catch(e){
+        // Cross-origin without CORS? No worries—leave as "—"
+      }
+    }
+
+    function renderCard(c){
+      const card = el("article", { className:"card", id:`creator-${c.key}` });
+
+      const cover = el("img", {
+        className:"cover", alt:"",
+        src: c.cover || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'/>"
+      });
+
+      const avatar = el("img", {
+        className:"avatar", alt:"",
+        src: c.avatar || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44'/>"
+      });
+
+      const name = el("h2", { className:"name" }, []);
+      name.textContent = c.name;
+
+      const row = el("div", { className:"row" }, [avatar, name]);
+
+      const desc = el("p", { className:"desc" }, []);
+      desc.textContent = c.note || "";
+
+      const meta = el("div", { className:"meta" }, [
+        el("span", { className:"pill js-count" }, []),
+        el("span", { className:"pill js-updated" }, []),
+      ]);
+
+      const go = el("a", { className:"btn", href:c.href, target:"_blank", rel:"noopener" }, []);
+      go.textContent = "Open list ↗";
+
+      const body = el("div", { className:"body" }, [row, desc, meta, el("div", {className:"cta"}, [go])]);
+
+      card.appendChild(cover);
+      card.appendChild(body);
+      grid.appendChild(card);
+
+      hydrateCard(card, c.dataUrl);
+    }
+
+    async function loadCreators(){
+      const res = await fetch("./creators.json", { cache:"no-store" });
+      const creators = await res.json();
+      creators.forEach(renderCard);
+
+      // simple search
+      q.addEventListener("input", ()=>{
+        const term = q.value.trim().toLowerCase();
+        creators.forEach(c=>{
+          const card = document.getElementById(`creator-${c.key}`);
+          const hay = (c.name + " " + (c.note||"")).toLowerCase();
+          if (!term || hay.includes(term)) card.classList.remove("hidden");
+          else card.classList.add("hidden");
+        });
+      });
+    }
+
+    loadCreators();
+  </script>
+</body>
+</html>
