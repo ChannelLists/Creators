@@ -1,0 +1,29 @@
+[
+  {
+    "key": "jacksucks",
+    "name": "JackSucksAtLife",
+    "note": "All of Jack’s channels.",
+    "href": "https://<your-pages-domain>/jacksucks/", 
+    "dataUrl": "https://<your-pages-domain>/jacksucks/data.json",
+    "cover": "",
+    "avatar": ""
+  },
+  {
+    "key": "mrbeast",
+    "name": "MrBeast",
+    "note": "Main + side channels.",
+    "href": "https://<your-pages-domain>/mrbeast/",
+    "dataUrl": "https://<your-pages-domain>/mrbeast/data.json",
+    "cover": "",
+    "avatar": ""
+  },
+  {
+    "key": "kreekcraft",
+    "name": "KreekCraft",
+    "note": "Main, Shorts, Reacts, etc.",
+    "href": "https://<your-pages-domain>/kreekcraft/",
+    "dataUrl": "https://<your-pages-domain>/kreekcraft/data.json",
+    "cover": "",
+    "avatar": ""
+  }
+]
